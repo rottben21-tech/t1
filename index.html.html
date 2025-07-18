@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6단계 영어 단어 레벨 테스트</title>
+    <style>
+        /* CSS 스타일 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
+        /* HTML, BODY 기본 여백 초기화 및 전체 너비/높이 설정 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%; /* min-height: 100vh와 함께 작동하도록 */
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            flex-direction: column; /* 자식 요소들을 세로로 정렬 */
+            justify-content: center; /* 세로 중앙 정렬 */
+            align-items: center; /* 가로 중앙 정렬 */
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            padding: 20px; /* 전체적인 여백 유지 */
+            box-sizing: border-box;
+            position: relative;
+            overflow-x: hidden; /* 가로 스크롤 방지 */
+        }
+
+        #sml-branding { /* 에스엠엘 영어 로고 스타일 */
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #007bff; /* 색상 파란색으로 변경 */
+            padding: 5px 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            z-index: 1000; /* 다른 요소 위에 표시되도록 */
+        }
+
+        #start-screen, #quiz-container, #result-area {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%; /* 부모(flex item)의 100% 너비 사용 */
+            max-width: 90vw; /* 뷰포트 너비의 90%를 최대 너비로 설정하여 반응형 중앙 정렬 개선 */
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1c1e21;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            text-align: center;
+            color: #1c1e21;
+            margin-top: 0;
+        }
+
+        #current-level-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+
+        .question {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex !important; /* !important 추가 */
+            flex-direction: column !important; /* !important 추가 */
+            gap: 0.75rem;
+        }
+
+        .options label {
+            display: block !important; /* !important 추가 */
+            width: 100%; /* 가로 너비 100%로 설정 */
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-size: 1rem;
+        }
+
+        .options label:hover {
+            background-color: #f5f5f5;
+            border-color: #007bff;
+        }
+        
+        .options input[type="radio"] {
+            display: none;
+        }
+
+        .options input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        .options input[type="radio"]:checked + span::before {
+            content: '✔ ';
+        }
+
+        button#next-button, button#start-test-button {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: background-color 0.2s ease;
+        }
+
+        button#next-button:hover, button#start-test-button:hover {
+            background-color: #0056b3;
+        }
+        
+        button#next-button:disabled, button#start-test-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 결과 화면 스타일 */
+        #result-area {
+            text-align: center;
+        }
+        
+        #result-area .level-announcement {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+
+        #result-area .recommendation {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            background-color: #e9f5ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 5px solid #007bff;
+            text-align: left;
+        }
+
+        #result-area h3 {
+            margin-top: 2.5rem;
+            color: #555;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        #result-area .review-item {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        #result-area .review-item p {
+            margin: 0.25rem 0;
+        }
+
+        #result-area .review-item .review-question {
+            font-weight: bold;
+        }
+        
+        #result-area .review-item .review-user-answer {
+            color: #dc3545; /* 빨간색 */
+        }
+
+        #result-area .review-item .review-correct-answer {
+            color: #28a745; /* 초록색 */
+        }
+        
+        #result-area hr {
+            border: none;
+            border-top: 1px dashed #ccc;
+        }
+
+        /* 시작 화면 특정 스타일 */
+        #start-screen .level-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        #start-screen .level-options label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        #start-screen .level-options label:hover {
+            background-color: #f8f8f8;
+            border-color: #007bff;
+        }
+
+        #start-screen .level-options input[type="radio"] {
+            margin-right: 0.75rem;
+            accent-color: #007bff; /* 라디오 버튼 색상 */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sml-branding">에스엠엘 영어</div> <!-- SML English branding added -->
+
+    <div id="start-screen">
+        <h1>나의 영어 단어 레벨 테스트</h1>
+        <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: #555;">
+            현재 레벨에서 20문제중 16개 이상을 맞히지 못하면 다음 낮은 레벨로 테스트가 자동 진행됩니다.
+        </p>
+        <div class="level-options">
+            <label>
+                <input type="radio" name="startLevel" value="level6"> Level 6 (Advanced High) – IELTS ~ TOEFL
+            </label>
+            <label>
+                <input type="radio" name="startLevel" value="level5"> Level 5 (Advanced) 고2~고3
+            </label>
+            <label>
+                <input type="radio" name="startLevel" value="level4"> Level 4 (Intermediate High) 중3 ~ 고1
+            </label>
+            <label>
+                <input type="radio" name="startLevel" value="level3"> Level 3 (Intermediate) 중1 ~ 중2
+            </label>
+            <label>
+                <input type="radio" name="startLevel" value="level2"> Level 2 (Beginner High) 초5~ 초6
+            </label>
+            <label>
+                <input type="radio" name="startLevel" value="level1"> Level 1 (Beginner) 초3 ~ 초4
+            </label>
+        </div>
+        <button id="start-test-button" disabled>테스트 시작</button>
+    </div>
+
+    <div id="quiz-container" style="display:none;">
+        <h1>6단계 영어 단어 레벨 테스트</h1>
+        <p id="current-level-display"></p>
+        <div id="question-area"></div>
+        <button id="next-button" disabled>Next Question</button>
+    </div>
+
+    <div id="result-area" style="display:none;"></div>
+
+    <script>
+        // JavaScript logic
+        
+        // --- 1. Word Data Definition ---
+        const wordData = {
+            "level6": [ // Advanced: https://g.co/gemini/share/f45044d08b52
+                { question: "Choose the synonym for 'ubiquitous'.", options: ["scarce", "pervasive", "limited", "rare"], answer: "pervasive" },
+                { question: "What does 'ameliorate' mean?", options: ["worsen", "improve", "destroy", "aggravate"], answer: "improve" },
+                { question: "Select the word that means 'characterized by kindness and generosity'.", options: ["malicious", "selfish", "benevolent", "indifferent"], answer: "benevolent" },
+                { question: "Which word means 'a difficult problem or enigma'?", options: ["solution", "conundrum", "clarity", "simplicity"], answer: "conundrum" },
+                { question: "What is the meaning of 'deleterious'?", options: ["beneficial", "healthy", "harmful", "harmless"], answer: "harmful" },
+                { question: "Choose the synonym for 'ephemeral'.", options: ["eternal", "transient", "permanent", "enduring"], answer: "transient" },
+                { question: "What does 'equivocal' mean?", options: ["clear", "certain", "ambiguous", "direct"], answer: "ambiguous" },
+                { question: "Select the word that means 'to make a problem, bad situation, or negative feeling worse'.", options: ["alleviate", "exacerbate", "resolve", "soothe"], answer: "exacerbate" },
+                { question: "Which word means 'happening by chance, rather than by design'?", options: ["planned", "fortuitous", "inevitable", "deliberate"], answer: "fortuitous" },
+                { question: "What is the meaning of 'gregarious'?", options: ["introverted", "sociable", "isolated", "reserved"], answer: "sociable" },
+                { question: "Choose the word that means 'a peculiar habit or mannerism'.", options: ["common trait", "normal behavior", "idiosyncrasy", "shared opinion"], answer: "idiosyncrasy" },
+                { question: "What does 'impecunious' mean?", options: ["wealthy", "generous", "poor", "frugal"], answer: "poor" },
+                { question: "Select the word that means 'to place close together for contrasting effect'.", options: ["separate", "combine", "juxtapose", "conceal"], answer: "juxtapose" },
+                { question: "Which word means 'expressed clearly; easy to understand'?", options: ["confusing", "unclear", "lucid", "complex"], answer: "lucid" },
+                { question: "What is the meaning of 'malleable'?", options: ["rigid", "flexible", "unchanging", "brittle"], answer: "flexible" },
+                { question: "Choose the synonym for 'obfuscate'.", options: ["clarify", "explain", "obscure", "reveal"], answer: "obscure" },
+                { question: "What does 'perfunctory' mean?", options: ["thorough", "enthusiastic", "cursory", "earnest"], answer: "cursory" },
+                { question: "Select the word that means 'exceedingly idealistic; unrealistic and impractical'.", options: ["realistic", "practical", "quixotic", "reasonable"], answer: "quixotic" },
+                { question: "Which word means 'obstinately uncooperative'?", options: ["obedient", "cooperative", "recalcitrant", "docile"], answer: "recalcitrant" },
+                { question: "What is the meaning of 'surreptitious'?", options: ["open", "secret", "honest", "loud"], answer: "secret" }
+            ],
+            "level5": [ // Upper-Intermediate: https://g.co/gemini/share/176069b45785
+                { question: "Choose the synonym for 'acknowledge'.", options: ["deny", "recognize", "ignore", "reject"], answer: "recognize" },
+                { question: "What does 'alter' mean?", options: ["maintain", "change", "fix", "duplicate"], answer: "change" },
+                { question: "Select the word that means 'a part or element of a larger whole'.", options: ["entirety", "component", "result", "cause"], answer: "component" },
+                { question: "Which word means 'to grant or bestow' or 'to have discussions'?", options: ["take away", "confer", "refuse", "disregard"], answer: "confer" },
+                { question: "What is the meaning of 'confront'?", options: ["avoid", "face", "escape", "hide"], answer: "face" },
+                { question: "Choose the synonym for 'constitute'.", options: ["disintegrate", "comprise", "destroy", "remove"], answer: "comprise" },
+                { question: "What does 'deviate' mean?", options: ["conform", "diverge", "adhere", "stop"], answer: "diverge" },
+                { question: "Select the word that means 'a lack of compatibility or similarity between two or more facts'.", options: ["agreement", "discrepancy", "similarity", "harmony"], answer: "discrepancy" },
+                { question: "Which word means 'to spread or disperse information widely'?", options: ["collect", "disseminate", "conceal", "restrict"], answer: "disseminate" },
+                { question: "What is the meaning of 'empirical'?", options: ["theoretical", "abstract", "experimental", "intuitive"], answer: "experimental" },
+                { question: "Choose the synonym for 'entail'.", options: ["exclude", "involve", "simplify", "evade"], answer: "involve" },
+                { question: "Which word means 'to make a problem, bad situation, or negative feeling worse'?", options: ["improve", "alleviate", "mitigate", "exacerbate"], answer: "exacerbate" }, // 12번 문제 수정됨
+                { question: "Select the word that means 'stated clearly and in detail'.", options: ["ambiguous", "hidden", "explicit", "indirect"], answer: "explicit" },
+                { question: "Which word means 'to make an action or process easy or easier'?", options: ["hinder", "complicate", "facilitate", "prohibit"], answer: "facilitate" },
+                { question: "What is the meaning of 'inevitable'?", options: ["avoidable", "unavoidable", "uncertain", "accidental"], answer: "unavoidable" },
+                { question: "Choose the synonym for 'integrate'.", options: ["separate", "combine", "destroy", "remove"], answer: "combine" },
+                { question: "What does 'legitimate' mean?", options: ["illegal", "unjustified", "lawful", "dubious"], answer: "lawful" },
+                { question: "Select the word that means 'a typical example or pattern of something; a model'.", options: ["exception", "paradigm", "error", "confusion"], answer: "paradigm" },
+                { question: "Which word means 'to form a theory without firm evidence'?", options: ["confirm", "prove", "speculate", "disregard"], answer: "speculate" },
+                { question: "What is the meaning of 'subsequent'?", options: ["previous", "simultaneous", "following", "similar"], answer: "following" }
+            ],
+            "level4": [ // Intermediate: https://g.co/gemini/share/59f1db1dc77d
+                { question: "Choose the synonym for 'abolish'.", options: ["establish", "maintain", "eliminate", "strengthen"], answer: "eliminate" },
+                { question: "What does 'allocate' mean?", options: ["collect", "distribute", "separate", "remove"], answer: "distribute" },
+                { question: "Select the word that means 'to state a fact or belief confidently'.", options: ["deny", "assert", "abandon", "hide"], answer: "assert" },
+                { question: "Which word means 'to give something in recognition of loss or suffering'?", options: ["damage", "compensate", "ignore", "demand"], answer: "compensate" },
+                { question: "What is the meaning of 'comprehensive'?", options: ["limited", "partial", "inclusive", "simple"], answer: "inclusive" },
+                { question: "Choose the synonym for 'consensus'.", options: ["disagreement", "dispute", "agreement", "opposition"], answer: "agreement" },
+                { question: "What does 'consistent' mean?", options: ["inconsistent", "erratic", "uniform", "irregular"], answer: "uniform" },
+                { question: "Select the word that means 'a limitation or restriction'.", options: ["freedom", "constraint", "opportunity", "solution"], answer: "constraint" },
+                { question: "Which word means 'a prolonged public dispute about a matter of opinion'?", options: ["harmony", "controversy", "peace", "agreement"], answer: "controversy" },
+                { question: "What is the meaning of 'derive'?", options: ["originate", "supply", "remove", "begin"], answer: "originate" },
+                { question: "Choose the synonym for 'dimension'.", options: ["surface", "aspect", "result", "cause"], answer: "aspect" },
+                { question: "What does 'eliminate' mean?", options: ["include", "remove", "add", "maintain"], answer: "remove" },
+                { question: "Select the word that means 'to represent something as being larger or better than it really is'.", options: ["understate", "exaggerate", "state accurately", "hide"], answer: "exaggerate" },
+                { question: "Which word means 'possible to do easily or conveniently'?", options: ["impossible", "feasible", "complex", "unrealistic"], answer: "feasible" },
+                { question: "What is the meaning of 'fluctuate'?", options: ["stabilize", "vary", "decrease", "fix"], answer: "vary" },
+                { question: "Choose the synonym for 'gene'.", options: ["cell", "heredity unit", "organ", "protein"], answer: "heredity unit" },
+                { question: "What does 'implement' mean?", options: ["plan", "execute", "cancel", "delay"], answer: "execute" },
+                { question: "Select the word that means 'existing in something as a permanent, essential attribute'.", options: ["external", "acquired", "inherent", "temporary"], answer: "inherent" },
+                { question: "Which word means 'to control or influence a person or situation cleverly or unfairly'?", options: ["neglect", "manipulate", "handle honestly", "disregard"], answer: "manipulate" },
+                { question: "What is the meaning of 'perceive'?", options: ["ignore", "discern", "reject", "forget"], answer: "discern" }
+            ],
+            "level3": [ // Pre-Intermediate: https://g.co/gemini/share/cebc3dcf417d
+                { question: "Choose the synonym for 'acquire'.", options: ["lose", "discard", "obtain", "share"], answer: "obtain" },
+                { question: "What does 'alternative' mean?", options: ["mainstream", "option", "basic", "sole"], answer: "option" },
+                { question: "Select the word that means 'to examine something methodically and in detail'.", options: ["synthesize", "analyze", "ignore", "copy"], answer: "analyze" },
+                { question: "Which word means 'to come near or nearer to someone or something'?", options: ["depart", "approach", "avoid", "flee"], answer: "approach" },
+                { question: "What is the meaning of 'benefit'?", options: ["disadvantage", "advantage", "problem", "hindrance"], answer: "advantage" },
+                { question: "Choose the synonym for 'consequently'.", options: ["nevertheless", "as a result", "previously", "simultaneously"], answer: "as a result" },
+                { question: "What does 'contribute' mean?", options: ["take away", "give", "hinder", "consume"], answer: "give" },
+                { question: "Select the word that means 'to indicate the faults of someone in a disapproving way'.", options: ["praise", "criticize", "support", "agree"], answer: "criticize" },
+                { question: "Which word means 'to clearly show the existence or truth of something'?", options: ["hide", "demonstrate", "deny", "destroy"], answer: "demonstrate" },
+                { question: "What is the meaning of 'distinguish'?", options: ["confuse", "differentiate", "combine", "resemble"], answer: "differentiate" },
+                { question: "Choose the synonym for 'emphasize'.", options: ["downplay", "stress", "ignore", "reduce"], answer: "stress" },
+                { question: "What does 'establish' mean?", options: ["destroy", "set up", "remove", "dismantle"], answer: "set up" },
+                { question: "Select the word that means 'to explain or make clear by using examples or charts'.", options: ["hide", "illustrate", "complicate", "mislead"], answer: "illustrate" },
+                { question: "Which word means 'to point out or show; to be a sign of'?", options: ["conceal", "indicate", "deny", "disregard"], answer: "indicate" },
+                { question: "What is the meaning of 'interpret'?", options: ["misunderstand", "explain", "ignore", "copy"], answer: "explain" },
+                { question: "Choose the synonym for 'maintain'.", options: ["abandon", "keep", "destroy", "alter"], answer: "keep" },
+                { question: "What does 'occur' mean?", options: ["prevent", "happen", "stop", "cancel"], answer: "happen" },
+                { question: "Select the word that means 'to say or estimate what will happen in the future'.", options: ["recall the past", "explain the present", "predict", "record facts"], answer: "predict" },
+                { question: "Which word means 'sufficiently great or important to be worthy of attention'?", options: ["trivial", "significant", "meaningless", "small"], answer: "significant" },
+                { question: "What is the meaning of 'tendency'?", options: ["exception", "inclination", "discrepancy", "obstacle"], answer: "inclination" }
+            ],
+            "level2": [ // Beginner: https://g.co/gemini/share/d1aa5894c404
+                { question: "Choose the synonym for 'apologize'.", options: ["thank", "say sorry", "praise", "blame"], answer: "say sorry" },
+                { question: "What does 'convenient' mean?", options: ["inconvenient", "handy", "difficult", "easy"], answer: "handy" },
+                { question: "Select the word that means 'an unfavorable circumstance or condition'.", options: ["advantage", "drawback", "merit", "opportunity"], answer: "drawback" },
+                { quest
